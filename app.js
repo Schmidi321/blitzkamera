@@ -29,8 +29,7 @@ const modalClose = document.getElementById('modalClose');
 
 const SAMPLE_W = 64;
 const SAMPLE_H = 36;
-const CAPTURE_W = 960;
-const CAPTURE_H = 540;
+const MAX_CAPTURE_DIM = 960;
 const BUFFER_MS = 2000;
 const CAPTURE_FPS = 20;
 const COOLDOWN_MS = 1200;
@@ -42,8 +41,6 @@ sampleCanvas.height = SAMPLE_H;
 const sampleCtx = sampleCanvas.getContext('2d', { willReadFrequently: true });
 
 const captureCanvas = document.createElement('canvas');
-captureCanvas.width = CAPTURE_W;
-captureCanvas.height = CAPTURE_H;
 const captureCtx = captureCanvas.getContext('2d');
 
 let stream = null;
@@ -133,7 +130,20 @@ function getBrightness() {
 }
 
 function captureFrame(time) {
-  captureCtx.drawImage(video, 0, 0, CAPTURE_W, CAPTURE_H);
+  const vw = video.videoWidth;
+  const vh = video.videoHeight;
+  if (!vw || !vh) return;
+
+  const scale = Math.min(1, MAX_CAPTURE_DIM / Math.max(vw, vh));
+  const w = Math.round(vw * scale);
+  const h = Math.round(vh * scale);
+
+  if (captureCanvas.width !== w || captureCanvas.height !== h) {
+    captureCanvas.width = w;
+    captureCanvas.height = h;
+  }
+
+  captureCtx.drawImage(video, 0, 0, w, h);
   const dataUrl = captureCanvas.toDataURL('image/jpeg', 0.85);
   buffer.push({ time, dataUrl });
   while (buffer.length && time - buffer[0].time > BUFFER_MS) {
