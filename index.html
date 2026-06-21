@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>⚡ Blitzkamera</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <h1>⚡ Blitzkamera</h1>
+    <span id="status" class="status">Bereit</span>
+  </header>
+
+  <main>
+    <div class="camera-wrap">
+      <video id="video" autoplay playsinline muted></video>
+      <div class="flash-overlay" id="flashOverlay"></div>
+      <div class="delta-bar"><div class="delta-fill" id="deltaFill"></div></div>
+    </div>
+
+    <div class="controls">
+      <button id="toggleBtn" class="primary-btn">Kamera starten</button>
+
+      <label class="slider-label">
+        <span>Empfindlichkeit: <span id="sensValue">5</span></span>
+        <input type="range" id="sensitivity" min="1" max="10" value="5">
+      </label>
+
+      <label class="slider-label">
+        <span>Vorlauf: <span id="preTriggerValue">250</span> ms</span>
+        <input type="range" id="preTrigger" min="0" max="800" step="50" value="250">
+      </label>
+    </div>
+
+    <section class="gallery">
+      <h2>Aufnahmen (<span id="shotCount">0</span>)</h2>
+      <div id="gallery" class="gallery-grid"></div>
+    </section>
+  </main>
+
+  <div id="modal" class="modal">
+    <img id="modalImg" src="" alt="Blitzfoto">
+    <div class="modal-actions">
+      <a id="modalDownload" class="primary-btn" download>Speichern</a>
+      <button id="modalClose" class="secondary-btn">Schließen</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
