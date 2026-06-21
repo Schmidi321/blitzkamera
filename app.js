@@ -1,14 +1,27 @@
 const video = document.getElementById('video');
 const toggleBtn = document.getElementById('toggleBtn');
+const statusPill = document.getElementById('statusPill');
 const statusEl = document.getElementById('status');
 const flashOverlay = document.getElementById('flashOverlay');
+const boltStreak = document.getElementById('boltStreak');
 const deltaFill = document.getElementById('deltaFill');
+
 const sensitivitySlider = document.getElementById('sensitivity');
 const sensValue = document.getElementById('sensValue');
 const preTriggerSlider = document.getElementById('preTrigger');
 const preTriggerValue = document.getElementById('preTriggerValue');
-const galleryEl = document.getElementById('gallery');
+
+const settingsBtn = document.getElementById('settingsBtn');
+const settingsSheet = document.getElementById('settingsSheet');
+const settingsClose = document.getElementById('settingsClose');
+const galleryBtn = document.getElementById('galleryBtn');
+const gallerySheet = document.getElementById('gallerySheet');
+const backdrop = document.getElementById('backdrop');
+const shotBadge = document.getElementById('shotBadge');
 const shotCountEl = document.getElementById('shotCount');
+const galleryEl = document.getElementById('gallery');
+const emptyGallery = document.getElementById('emptyGallery');
+
 const modal = document.getElementById('modal');
 const modalImg = document.getElementById('modalImg');
 const modalDownload = document.getElementById('modalDownload');
@@ -52,7 +65,7 @@ sensitivitySlider.addEventListener('input', () => {
 });
 
 preTriggerSlider.addEventListener('input', () => {
-  preTriggerValue.textContent = preTriggerSlider.value;
+  preTriggerValue.textContent = preTriggerSlider.value + ' ms';
 });
 
 toggleBtn.addEventListener('click', () => {
@@ -74,7 +87,7 @@ async function startCamera() {
       audio: false
     });
   } catch (err) {
-    setStatus('Kamera-Zugriff fehlgeschlagen: ' + err.message, 'triggered');
+    setStatus('Zugriff fehlgeschlagen: ' + err.message, 'triggered');
     return;
   }
 
@@ -85,26 +98,28 @@ async function startCamera() {
   buffer = [];
   lastTriggerTime = -Infinity;
   running = true;
-  toggleBtn.textContent = 'Kamera stoppen';
+  document.body.classList.add('running');
+  toggleBtn.setAttribute('aria-label', 'Kamera stoppen');
   setStatus('Überwache...', 'active');
   rafId = requestAnimationFrame(loop);
 }
 
 function stopCamera() {
   running = false;
+  document.body.classList.remove('running');
   if (rafId) cancelAnimationFrame(rafId);
   if (stream) {
     stream.getTracks().forEach(track => track.stop());
     stream = null;
   }
   video.srcObject = null;
-  toggleBtn.textContent = 'Kamera starten';
+  toggleBtn.setAttribute('aria-label', 'Kamera starten');
   setStatus('Bereit', '');
 }
 
 function setStatus(text, cls) {
   statusEl.textContent = text;
-  statusEl.className = 'status' + (cls ? ' ' + cls : '');
+  statusPill.className = 'status-pill' + (cls ? ' ' + cls : '');
 }
 
 function getBrightness() {
@@ -146,27 +161,36 @@ function onLightningDetected(now) {
   const frame = pickFrameBefore(now - preTriggerMs);
   if (!frame) return;
 
-  addToGallery(frame.dataUrl, now);
+  addToGallery(frame.dataUrl);
   triggerFlashFeedback();
 }
 
 function triggerFlashFeedback() {
   setStatus('Blitz erkannt!', 'triggered');
+
   flashOverlay.classList.remove('flash');
   void flashOverlay.offsetWidth;
   flashOverlay.classList.add('flash');
+
+  boltStreak.classList.remove('flash');
+  void boltStreak.offsetWidth;
+  boltStreak.classList.add('flash');
+
   setTimeout(() => {
     if (running) setStatus('Überwache...', 'active');
   }, 1000);
 }
 
-function addToGallery(dataUrl, time) {
+function addToGallery(dataUrl) {
   shotCount += 1;
   shotCountEl.textContent = shotCount;
+  shotBadge.textContent = shotCount;
+  shotBadge.hidden = false;
+  emptyGallery.style.display = 'none';
 
   const img = document.createElement('img');
   img.src = dataUrl;
-  img.alt = 'Blitzfoto ' + new Date(Date.now()).toLocaleTimeString();
+  img.alt = 'Blitzfoto ' + new Date().toLocaleTimeString();
   img.addEventListener('click', () => openModal(dataUrl));
   galleryEl.prepend(img);
 }
@@ -178,13 +202,26 @@ function openModal(dataUrl) {
   modal.classList.add('open');
 }
 
-modalClose.addEventListener('click', () => {
-  modal.classList.remove('open');
-});
-
+modalClose.addEventListener('click', () => modal.classList.remove('open'));
 modal.addEventListener('click', (e) => {
   if (e.target === modal) modal.classList.remove('open');
 });
+
+function openSheet(sheet) {
+  sheet.classList.add('open');
+  backdrop.classList.add('open');
+}
+
+function closeSheets() {
+  settingsSheet.classList.remove('open');
+  gallerySheet.classList.remove('open');
+  backdrop.classList.remove('open');
+}
+
+settingsBtn.addEventListener('click', () => openSheet(settingsSheet));
+galleryBtn.addEventListener('click', () => openSheet(gallerySheet));
+settingsClose.addEventListener('click', closeSheets);
+backdrop.addEventListener('click', closeSheets);
 
 function loop(now) {
   if (!running) return;

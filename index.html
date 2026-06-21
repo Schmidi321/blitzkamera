@@ -3,45 +3,108 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#04040a">
 <title>⚡ Blitzkamera</title>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <header>
-    <h1>⚡ Blitzkamera</h1>
-    <span id="status" class="status">Bereit</span>
-  </header>
 
-  <main>
-    <div class="camera-wrap">
-      <video id="video" autoplay playsinline muted></video>
-      <div class="flash-overlay" id="flashOverlay"></div>
-      <div class="delta-bar"><div class="delta-fill" id="deltaFill"></div></div>
+  <svg width="0" height="0" style="position:absolute">
+    <defs>
+      <linearGradient id="boltGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#00e5ff"/>
+        <stop offset="100%" stop-color="#7c5cff"/>
+      </linearGradient>
+    </defs>
+  </svg>
+
+  <div class="stage">
+    <video id="video" autoplay playsinline muted></video>
+    <div class="vignette"></div>
+    <div class="grain"></div>
+    <div class="flash-overlay" id="flashOverlay"></div>
+
+    <svg id="boltStreak" class="bolt-streak" viewBox="0 0 48 64" fill="none">
+      <path d="M28 0 L4 36 L20 36 L16 64 L44 24 L26 24 Z"/>
+    </svg>
+
+    <div class="placeholder" id="placeholder">
+      <svg class="bolt-logo big" viewBox="0 0 48 64" fill="none">
+        <path d="M28 0 L4 36 L20 36 L16 64 L44 24 L26 24 Z" fill="url(#boltGrad)"/>
+      </svg>
+      <p>Kamera bereit zum Start</p>
     </div>
 
-    <div class="controls">
-      <button id="toggleBtn" class="primary-btn">Kamera starten</button>
+    <header class="topbar">
+      <div class="brand">
+        <svg class="bolt-logo" viewBox="0 0 48 64" fill="none">
+          <path d="M28 0 L4 36 L20 36 L16 64 L44 24 L26 24 Z" fill="url(#boltGrad)"/>
+        </svg>
+        <span>Blitzkamera</span>
+      </div>
+      <div class="status-pill" id="statusPill">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="status">Bereit</span>
+      </div>
+    </header>
 
-      <label class="slider-label">
-        <span>Empfindlichkeit: <span id="sensValue">5</span></span>
-        <input type="range" id="sensitivity" min="1" max="10" value="5">
-      </label>
-
-      <label class="slider-label">
-        <span>Vorlauf: <span id="preTriggerValue">250</span> ms</span>
-        <input type="range" id="preTrigger" min="0" max="800" step="50" value="250">
-      </label>
+    <div class="delta-meter">
+      <div class="delta-fill" id="deltaFill"></div>
     </div>
 
-    <section class="gallery">
-      <h2>Aufnahmen (<span id="shotCount">0</span>)</h2>
-      <div id="gallery" class="gallery-grid"></div>
-    </section>
-  </main>
+    <div class="dock">
+      <button class="dock-btn" id="settingsBtn" aria-label="Einstellungen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="4" y1="6" x2="20" y2="6"/>
+          <circle cx="9" cy="6" r="2" fill="currentColor" stroke="none"/>
+          <line x1="4" y1="12" x2="20" y2="12"/>
+          <circle cx="15" cy="12" r="2" fill="currentColor" stroke="none"/>
+          <line x1="4" y1="18" x2="20" y2="18"/>
+          <circle cx="7" cy="18" r="2" fill="currentColor" stroke="none"/>
+        </svg>
+      </button>
 
-  <div id="modal" class="modal">
+      <button class="shutter" id="toggleBtn" aria-label="Kamera starten">
+        <span class="shutter-ring"></span>
+        <span class="shutter-core"></span>
+      </button>
+
+      <button class="dock-btn" id="galleryBtn" aria-label="Galerie">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round">
+          <rect x="3" y="7" width="14" height="14" rx="2"/>
+          <path d="M7 7V5a2 2 0 012-2h10a2 2 0 012 2v10a2 2 0 01-2 2h-2"/>
+        </svg>
+        <span class="badge" id="shotBadge" hidden>0</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="backdrop" id="backdrop"></div>
+
+  <div class="sheet" id="settingsSheet">
+    <div class="sheet-handle"></div>
+    <h2>Einstellungen</h2>
+    <label class="slider-label">
+      <span class="slider-row"><span>Empfindlichkeit</span><span id="sensValue">5</span></span>
+      <input type="range" id="sensitivity" min="1" max="10" value="5">
+    </label>
+    <label class="slider-label">
+      <span class="slider-row"><span>Vorlauf</span><span id="preTriggerValue">250 ms</span></span>
+      <input type="range" id="preTrigger" min="0" max="800" step="50" value="250">
+    </label>
+    <button class="secondary-btn full" id="settingsClose">Fertig</button>
+  </div>
+
+  <div class="sheet sheet-gallery" id="gallerySheet">
+    <div class="sheet-handle"></div>
+    <h2>Aufnahmen (<span id="shotCount">0</span>)</h2>
+    <div id="gallery" class="gallery-grid"></div>
+    <p class="empty-gallery" id="emptyGallery">Noch keine Aufnahmen – warte auf den nächsten Blitz.</p>
+  </div>
+
+  <div class="viewer" id="modal">
     <img id="modalImg" src="" alt="Blitzfoto">
-    <div class="modal-actions">
+    <div class="viewer-actions">
       <a id="modalDownload" class="primary-btn" download>Speichern</a>
       <button id="modalClose" class="secondary-btn">Schließen</button>
     </div>
