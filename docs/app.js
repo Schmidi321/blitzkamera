@@ -30,7 +30,20 @@ const emptyGallery = document.getElementById('emptyGallery');
 const modal = document.getElementById('modal');
 const modalImg = document.getElementById('modalImg');
 const modalDownload = document.getElementById('modalDownload');
+const modalShare = document.getElementById('modalShare');
 const modalClose = document.getElementById('modalClose');
+
+const flipCameraBtn = document.getElementById('flipCameraBtn');
+const flipLabel = document.getElementById('flipLabel');
+const compositeWrap = document.getElementById('compositeWrap');
+const compositeImg = document.getElementById('compositeImg');
+const compositeDownload = document.getElementById('compositeDownload');
+const compositeShare = document.getElementById('compositeShare');
+
+if (!navigator.share) {
+  modalShare.style.display = 'none';
+  compositeShare.style.display = 'none';
+}
 
 const SAMPLE_W = 64;
 const SAMPLE_H = 36;
@@ -48,6 +61,19 @@ const sampleCtx = sampleCanvas.getContext('2d', { willReadFrequently: true });
 const captureCanvas = document.createElement('canvas');
 const captureCtx = captureCanvas.getContext('2d');
 
+let facingMode = 'environment';
+
+// Restore saved settings
+sensitivitySlider.value = localStorage.getItem('bk_sens') ?? 5;
+preTriggerSlider.value  = localStorage.getItem('bk_pre')  ?? 250;
+sensValue.textContent       = sensitivitySlider.value;
+preTriggerValue.textContent = preTriggerSlider.value + ' ms';
+
+// Composite canvas (screen blend — stacks all lightning bolts)
+const compositeCanvas = document.createElement('canvas');
+const compositeCtx = compositeCanvas.getContext('2d');
+let compositeReady = false;
+
 let stream = null;
 let running = false;
 let rafId = null;
@@ -64,10 +90,12 @@ function sensitivityToThreshold(sens) {
 
 sensitivitySlider.addEventListener('input', () => {
   sensValue.textContent = sensitivitySlider.value;
+  localStorage.setItem('bk_sens', sensitivitySlider.value);
 });
 
 preTriggerSlider.addEventListener('input', () => {
   preTriggerValue.textContent = preTriggerSlider.value + ' ms';
+  localStorage.setItem('bk_pre', preTriggerSlider.value);
 });
 
 toggleBtn.addEventListener('click', () => {
@@ -82,7 +110,7 @@ async function startCamera() {
   try {
     stream = await navigator.mediaDevices.getUserMedia({
       video: {
-        facingMode: 'environment',
+        facingMode: facingMode,
         width: { ideal: 1280 },
         height: { ideal: 720 }
       },
@@ -177,7 +205,57 @@ function onLightningDetected(now) {
   if (!frame) return;
 
   addToGallery(frame.dataUrl);
+  addToComposite(frame.dataUrl);
+  playShutterSound();
   triggerFlashFeedback();
+}
+
+function playShutterSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(900, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(180, ctx.currentTime + 0.045);
+    gain.gain.setValueAtTime(0.16, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.055);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.06);
+  } catch(e) {}
+}
+
+function addToComposite(dataUrl) {
+  const img = new Image();
+  img.onload = () => {
+    if (!compositeReady) {
+      compositeCanvas.width  = img.naturalWidth;
+      compositeCanvas.height = img.naturalHeight;
+      compositeCtx.fillStyle = '#000';
+      compositeCtx.fillRect(0, 0, compositeCanvas.width, compositeCanvas.height);
+      compositeReady = true;
+    }
+    compositeCtx.globalCompositeOperation = 'screen';
+    compositeCtx.drawImage(img, 0, 0, compositeCanvas.width, compositeCanvas.height);
+    const url = compositeCanvas.toDataURL('image/jpeg', 0.92);
+    compositeImg.src = url;
+    compositeDownload.href = url;
+    compositeWrap.hidden = false;
+  };
+  img.src = dataUrl;
+}
+
+async function shareDataUrl(dataUrl, filename) {
+  if (!navigator.share) return;
+  try {
+    const blob = await (await fetch(dataUrl)).blob();
+    const file = new File([blob], filename, { type: 'image/jpeg' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: 'Blitzkamera', text: 'Aufgenommen mit Blitzkamera von AppReich' });
+    }
+  } catch(e) {}
 }
 
 function triggerFlashFeedback() {
@@ -220,6 +298,17 @@ function openModal(dataUrl) {
 modalClose.addEventListener('click', () => modal.classList.remove('open'));
 modal.addEventListener('click', (e) => {
   if (e.target === modal) modal.classList.remove('open');
+});
+modalShare.addEventListener('click', () => shareDataUrl(modalImg.src, 'blitz-' + Date.now() + '.jpg'));
+
+compositeImg.addEventListener('click', () => openModal(compositeImg.src));
+compositeShare.addEventListener('click', () => shareDataUrl(compositeImg.src, 'blitz-komposit.jpg'));
+
+flipCameraBtn.addEventListener('click', async () => {
+  facingMode = facingMode === 'environment' ? 'user' : 'environment';
+  flipLabel.textContent = facingMode === 'environment' ? 'Frontkamera' : 'Rückkamera';
+  if (running) { stopCamera(); await startCamera(); }
+  closeSheets();
 });
 
 function openSheet(sheet) {

@@ -463,6 +463,60 @@ input[type="range"]::-moz-range-thumb {
   text-align: center;
 }
 
+/* ---------- composite ---------- */
+
+.composite-wrap {
+  margin-bottom: 18px;
+  padding: 14px;
+  background: linear-gradient(135deg, rgba(124, 92, 255, 0.10), rgba(0, 229, 255, 0.07));
+  border: 1px solid rgba(124, 92, 255, 0.28);
+  border-radius: 14px;
+}
+
+.composite-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent2);
+}
+
+.composite-badge {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--accent2), var(--accent));
+  color: #fff;
+}
+
+.composite-img {
+  width: 100%;
+  border-radius: 10px;
+  display: block;
+  border: 1px solid var(--glass-border);
+  cursor: pointer;
+}
+
+.composite-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.composite-actions .primary-btn,
+.composite-actions .secondary-btn {
+  flex: 1;
+  padding: 11px 14px;
+  font-size: 0.88rem;
+  text-align: center;
+}
+
 /* ---------- fullscreen viewer ---------- */
 
 .viewer {
