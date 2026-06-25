@@ -496,6 +496,160 @@ input[type="range"]::-moz-range-thumb {
 
 .viewer-actions { display: flex; gap: 12px; }
 
+/* ---------- splash screen ---------- */
+
+.splash {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  animation: splash-exit 0.7s cubic-bezier(.4, 0, 1, 1) 2.8s both forwards;
+}
+
+.splash-bg-glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 65% 55% at 28% 32%, rgba(124, 92, 255, 0.30), transparent),
+    radial-gradient(ellipse 60% 50% at 76% 72%, rgba(0, 229, 255, 0.20), transparent);
+}
+
+.splash-content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  animation: splash-rise 1s cubic-bezier(.2, .9, .3, 1.1) 0.1s both;
+}
+
+.splash-logo-wrap {
+  position: relative;
+  width: 158px;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Pulsing halo rings */
+.splash-logo-wrap::before,
+.splash-logo-wrap::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.splash-logo-wrap::before {
+  width: 162px;
+  height: 162px;
+  border: 1px solid rgba(124, 92, 255, 0.30);
+  animation: ring-pulse 2.2s ease-in-out 0.4s infinite;
+}
+
+.splash-logo-wrap::after {
+  width: 190px;
+  height: 190px;
+  border: 1px solid rgba(0, 229, 255, 0.18);
+  animation: ring-pulse 2.2s ease-in-out 0.85s infinite;
+}
+
+@keyframes ring-pulse {
+  0%, 100% { opacity: 0.4; transform: scale(0.96); }
+  50%       { opacity: 1;   transform: scale(1.04); }
+}
+
+.splash-logo-svg {
+  width: 150px;
+  height: 130px;
+  filter:
+    drop-shadow(0 0 20px rgba(124, 92, 255, 0.75))
+    drop-shadow(0 0 48px rgba(0, 229, 255, 0.40));
+  animation: logo-glow 2.6s ease-in-out 0.5s infinite;
+}
+
+@keyframes logo-glow {
+  0%, 100% {
+    filter:
+      drop-shadow(0 0 20px rgba(124, 92, 255, 0.75))
+      drop-shadow(0 0 48px rgba(0, 229, 255, 0.40));
+  }
+  50% {
+    filter:
+      drop-shadow(0 0 34px rgba(124, 92, 255, 0.95))
+      drop-shadow(0 0 72px rgba(0, 229, 255, 0.60));
+  }
+}
+
+.splash-title {
+  margin: 0;
+  font-size: 2.15rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  background: linear-gradient(128deg, #00e5ff 0%, #7c5cff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: splash-fade-up 0.65s ease 0.45s both;
+}
+
+.splash-sub {
+  margin: 0;
+  font-size: 0.77rem;
+  font-weight: 500;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  animation: splash-fade-up 0.65s ease 0.65s both;
+}
+
+.splash-progress {
+  position: absolute;
+  bottom: calc(56px + var(--safe-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  width: 148px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.10);
+  border-radius: 999px;
+  overflow: hidden;
+  animation: splash-fade-up 0.5s ease 0.5s both;
+}
+
+.splash-progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent2), var(--accent));
+  border-radius: 999px;
+  animation: progress-fill 2.45s cubic-bezier(.25, .1, .25, 1) 0.35s both;
+}
+
+@keyframes progress-fill {
+  0%   { width: 0%; }
+  100% { width: 100%; }
+}
+
+@keyframes splash-rise {
+  0%   { opacity: 0; transform: translateY(22px) scale(0.88); }
+  100% { opacity: 1; transform: none; }
+}
+
+@keyframes splash-fade-up {
+  0%   { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: none; }
+}
+
+@keyframes splash-exit {
+  0%   { opacity: 1; }
+  100% { opacity: 0; }
+}
+
 /* ---------- landscape ---------- */
 
 @media (orientation: landscape) {

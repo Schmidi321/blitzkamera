@@ -1,3 +1,8 @@
+const splash = document.getElementById('splash');
+splash.addEventListener('animationend', e => {
+  if (e.animationName === 'splash-exit') splash.style.display = 'none';
+});
+
 const video = document.getElementById('video');
 const toggleBtn = document.getElementById('toggleBtn');
 const statusPill = document.getElementById('statusPill');
